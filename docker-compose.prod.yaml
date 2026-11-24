@@ -1,0 +1,67 @@
+services:
+  web:
+    container_name: '${COMPOSE_PROJECT_NAME}_web'
+    restart: always
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "${PORT:-3333}:3333"
+    networks:
+      - sail
+    depends_on:
+      pgsql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3333}
+      HOST: ${HOST:-0.0.0.0}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_KEY: ${APP_KEY?err}
+      SESSION_DRIVER: ${SESSION_DRIVER:-cookie}
+      APP_PASSWORD: ${APP_PASSWORD?err}
+      DB_HOST: ${DB_HOST:-pgsql}
+      DB_PORT: 5432
+      DB_USER: ${DB_USER?err}
+      DB_PASSWORD: ${DB_PASSWORD?err}
+      DB_DATABASE: ${DB_DATABASE?err}
+
+  pgsql:
+    image: 'pgvector/pgvector:0.8.0-pg17'
+    container_name: '${COMPOSE_PROJECT_NAME}_pgsql'
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    environment:
+      PGPASSWORD: '${DB_PASSWORD:-secret}'
+      POSTGRES_DB: '${DB_DATABASE:-default}'
+      POSTGRES_USER: '${DB_USER?:err}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
+    volumes:
+      - 'sailpgsql:/var/lib/postgresql/data'
+    networks:
+      - sail
+    healthcheck:
+      test: [ 'CMD', 'pg_isready', '-q', '-d', '${DB_DATABASE:-default}', '-U', '${DB_USER}' ]
+      retries: 3
+      timeout: 5s
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: '${COMPOSE_PROJECT_NAME}_cf'
+    command: tunnel run --token ${CF_TOKEN}
+    networks:
+      - sail
+    env_file:
+      - .env
+    deploy:
+      restart_policy:
+        condition: always
+
+networks:
+  sail:
+    driver: bridge
+
+volumes:
+  sailpgsql:

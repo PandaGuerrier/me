@@ -1,0 +1,4 @@
+name: me
+
+include:
+  - ./apps/web/docker-compose.yaml

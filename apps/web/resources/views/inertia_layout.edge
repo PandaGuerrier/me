@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('resources/images/favicon-32x32.png')}}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('resources/images/favicon-16x16.png')}}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('resources/images/apple-touch-icon.png')}}">
+
+    @if(!(page.ssrHead || []).join('').includes('<title'))
+      <title data-inertia>ME</title>
+    @end
+
+    @stack('dumper')
+    @viteReactRefresh()
+    @inertiaHead()
+    @vite(['app/core/ui/app/app.tsx'])
+  </head>
+
+  <body class="min-h-screen bg-background font-sans text-foreground antialiased">
+    @inertia()
+  </body>
+
+</html>
